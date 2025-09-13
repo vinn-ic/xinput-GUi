@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput2.h>
@@ -40,15 +41,30 @@ void disableInput(Display *display ,int id){
 }
 
 void enableInput(Display *display, int id){
+    XIDetachSlaveInfo detach;
+    detach.type = XIDetachSlave;
+    detach.deviceid = id;
+    XIChangeHierarchy(display, (XIAnyHierarchyChangeInfo*)&detach, 1);
+    XFlush(display);
+    
+    
     XIAttachSlaveInfo change;
     int ndevices;
     int masterID = -1;
     int isKeyboard = -1;
 
-    XIDeviceInfo *master = XIQueryDevice(display, id, &ndevices);
+    XIDeviceInfo *master = XIQueryDevice(display, XIAllDevices, &ndevices);
+    XIDeviceInfo *dev = NULL;
+
+    for(int i=0;i<ndevices;i++){
+        if(master[i].deviceid == id){
+            dev = &master[i];
+            break;
+        }
+    }
     
-    if(master->use == XISlaveKeyboard || master->use == XIMasterKeyboard) isKeyboard = 1;
-    if(master->use == XISlavePointer || master->use == XIMasterPointer) isKeyboard = 0;
+    if(dev->use == XISlaveKeyboard || dev->use == XIMasterKeyboard) isKeyboard = 1;
+    if(dev->use == XISlavePointer || dev->use == XIMasterPointer) isKeyboard = 0;
 
     XIFreeDeviceInfo(master);
 
@@ -56,12 +72,12 @@ void enableInput(Display *display, int id){
     for(int i=0;i<ndevices;i++){
         if(isKeyboard && info[i].use == XIMasterKeyboard){
             masterID = info[i].deviceid;
+            break;
         }if(isKeyboard == 0 && info[i].use == XIMasterPointer){
             masterID = info[i].deviceid;
+            break;
         }
     }
-    
-    
     
     change.type = XIAttachSlave;
     change.deviceid = id;
@@ -71,4 +87,5 @@ void enableInput(Display *display, int id){
     XFlush(display);
 
     XIFreeDeviceInfo(info);
+    usleep(100000);
 }
