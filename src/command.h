@@ -3,6 +3,7 @@
 
 #include <X11/Xlib.h>  // para o tipo Display
 
+
 typedef struct {
     char name[50];
     int id;

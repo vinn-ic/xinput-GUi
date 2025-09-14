@@ -6,6 +6,8 @@
 #include <X11/Xlib.h>
 #include <X11/extensions/XInput2.h>
 
+#include <gtk/gtk.h>
+
 typedef struct{
     char name[50];
     int id;
@@ -41,51 +43,8 @@ void disableInput(Display *display ,int id){
 }
 
 void enableInput(Display *display, int id){
-    XIDetachSlaveInfo detach;
-    detach.type = XIDetachSlave;
-    detach.deviceid = id;
-    XIChangeHierarchy(display, (XIAnyHierarchyChangeInfo*)&detach, 1);
-    XFlush(display);
-    
-    
-    XIAttachSlaveInfo change;
-    int ndevices;
-    int masterID = -1;
-    int isKeyboard = -1;
-
-    XIDeviceInfo *master = XIQueryDevice(display, XIAllDevices, &ndevices);
-    XIDeviceInfo *dev = NULL;
-
-    for(int i=0;i<ndevices;i++){
-        if(master[i].deviceid == id){
-            dev = &master[i];
-            break;
-        }
-    }
-    
-    if(dev->use == XISlaveKeyboard || dev->use == XIMasterKeyboard) isKeyboard = 1;
-    if(dev->use == XISlavePointer || dev->use == XIMasterPointer) isKeyboard = 0;
-
-    XIFreeDeviceInfo(master);
-
-    XIDeviceInfo *info = XIQueryDevice(display, XIAllDevices,  &ndevices);
-    for(int i=0;i<ndevices;i++){
-        if(isKeyboard && info[i].use == XIMasterKeyboard){
-            masterID = info[i].deviceid;
-            break;
-        }if(isKeyboard == 0 && info[i].use == XIMasterPointer){
-            masterID = info[i].deviceid;
-            break;
-        }
-    }
-    
-    change.type = XIAttachSlave;
-    change.deviceid = id;
-    change.new_master = masterID;
-
-    XIChangeHierarchy(display, (XIAnyHierarchyChangeInfo*)&change, 1);
-    XFlush(display);
-
-    XIFreeDeviceInfo(info);
-    usleep(100000);
+    char commnad[50];
+    sprintf(commnad, "xinput disable %d && xinput enable %d", id, id);
+    system(commnad);
+    g_print("comando executado >> %s", commnad);
 }
