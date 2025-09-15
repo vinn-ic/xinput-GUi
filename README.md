@@ -34,8 +34,4 @@ git clone https://github.com/vinn-ic/xinput-GUi.git
 rode o main
 ```bash
 cd xinput-GUI/src && ./main 
-<<<<<<< HEAD
 ```
-=======
-```
->>>>>>> 5b66404 (update gitignore)
